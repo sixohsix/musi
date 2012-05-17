@@ -45,3 +45,25 @@ def Eval(value_f):
     def eval_(now):
         return value_f(now)(now)
     return eval_
+
+
+def song_time(now):
+    return now
+
+
+class Tempo(object):
+    def __init__(self, bpm_f, bpb):
+        self.bpm_f = bpm_f
+        self.bpb = bpb
+
+    def song_beat(self, now):
+        return int(now / 60.0 * self.bpm_f(now))
+
+    def song_bar(self, now):
+        return self.song_beat(now) / self.bpb
+
+    def Duration(self, bars=0, beats=0):
+        nbeats = float((bars * self.bpb) + beats)
+        def duration(now):
+            return 1.0 / (self.bpm_f(now) / nbeats / 60.0)
+        return duration
