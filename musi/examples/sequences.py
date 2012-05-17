@@ -1,8 +1,15 @@
-from simplecoremidi import MIDISource
+from simplecoremidi import MIDISource, MIDIDestination
 from musi import C, Buffer, Tap, If, Eval, Tempo, midi, math, waves, play, countdown
 
 
-tempo = Tempo(C(120), 4)
+source = MIDISource("sequence emitter")
+dest = MIDIDestination("sequence control")
+
+midi_input = midi.Input(dest.recv)
+tempo_control = math.LinScale(C(60.0), C(2.0), midi.ControllerValue(midi_input, 2, 1))
+filter_control = midi.ControllerValue(midi_input, 2, 2)
+
+tempo = Tempo(tempo_control, 4)
 
 beat_f = tempo.Duration(beats=1)
 phrase_f = tempo.Duration(bars=4)
@@ -28,11 +35,19 @@ bass = midi.Mix(
          )
     )
 
-song = midi.Mix(notes, drums, bass)
+filter_ = midi.ControllerChange(
+    0, 52,
+    math.LinScale(C(0.0), C(0.5), filter_control))
+
+song = midi.Mix(
+    notes,
+    drums,
+    bass,
+    filter_,
+    )
 
 
 def emitter():
-    source = MIDISource("sequence emitter")
     def logsend(data):
         print data
         source.send(data)

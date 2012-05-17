@@ -53,7 +53,10 @@ def song_time(now):
 
 class Tempo(object):
     def __init__(self, bpm_f, bpb):
-        self.bpm_f = bpm_f
+        def no_zero_bpm(now):
+            bpm = bpm_f(now)
+            return bpm if bpm != 0.0 else 0.00000001
+        self.bpm_f = no_zero_bpm
         self.bpb = bpb
 
     def song_beat(self, now):

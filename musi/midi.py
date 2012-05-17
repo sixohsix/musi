@@ -86,4 +86,34 @@ def RandomNotes(channel,
     return Note(channel, pitch_f, velo_f, dur_f)
 
 
+
+class Input(object):
+    def __init__(self, recv_midi):
+        self.recv_midi = recv_midi
+        self.last_read_time = None
+        self.midi_buf = ()
+    def __call__(self, now):
+        if now > self.last_read_time:
+            self.midi_buf = self.recv_midi()
+            self.last_read_time = now
+        return self.midi_buf
+
+
+class ControllerValue(object):
+    def __init__(self, midi_input, channel, ccid, initial_val=0):
+        from .math import clamp
+        self.action = 0xb0 | clamp(0, 15, int(channel))
+        self.ccid = ccid
+        self.midi_input = midi_input
+        self.ccval = initial_val
+    def __call__(self, now):
+        inp = self.midi_input(now)
+        for i, byte in enumerate(inp):
+            if (byte == self.action
+                and len(inp) - i > 2
+                and inp[i+1] == self.ccid):
+                self.ccval = inp[i+2]
+        return self.ccval
+
+
 del C
