@@ -6,13 +6,7 @@ from time import time, sleep
 import random
 
 from simplecoremidi import MIDISource, MIDIDestination
-from musi import C, Buffer, Tap, If, midi, math, waves
-
-LOOP_WAIT = 1.0 / 200  # 200 Hz
-
-
-def all_notes_off():
-    return tuple(chain(*((0x90, n, 0) for n in range(127))))
+from musi import C, Buffer, Tap, If, midi, math, waves, play
 
 
 def FilterLFO():
@@ -20,7 +14,7 @@ def FilterLFO():
     ramp_per = math.Sub(C(3.0), math.Mul(C(2.9), inner_lfo))
     ramp = waves.Ramp(ramp_per)
     return midi.ControllerChange(
-        52,
+        0, 52,
         math.LinScale(
             C(0), C(72),
             ramp
@@ -28,15 +22,8 @@ def FilterLFO():
         )
 
 
-def Sometimes(probability_f, usual_f, sometimes_f, random_f=None):
-    if random_f is None:
-        random_f = math.Random()
-    return If(math.LessThan(random_f, probability_f), usual_f, sometimes_f)
-
-
-def heappush_all(heap, seq):
-    for item in seq:
-        heappush(heap, item)
+def Sometimes(probability_f, usual_f, sometimes_f, random_f):
+    return If(math.LessThan(random_f, probability_f), sometimes_f, usual_f)
 
 
 def countdown():
@@ -44,14 +31,17 @@ def countdown():
         print i
         sleep(1)
 
-random_f = math.Random(1234)
-
+random_f = math.Random(666)
 song = midi.Mix(
     FilterLFO(),
     Sometimes(
-        math.Mul(C(0.1), waves.Sine(C(30.0), C(0.25))),
+        math.LinScale(C(0.01), C(0.05), waves.Sine(C(30.0), C(0.25))),
         C(tuple()),
-        midi.RandomNotes(C(24), C(48), C(0.5), C(0.5), C(0.1), C(1.0), random_f),
+        midi.RandomNotes(0,
+                         C(24), C(48),
+                         C(0.5), C(0.5),
+                         C(0.1), C(0.2),
+                         random_f),
         random_f,
         )
     )
@@ -59,30 +49,9 @@ song = midi.Mix(
 
 def emitter():
     source = MIDISource("random note emitter")
-
-    frames = []
-
-    start_time = time()
-    song_time = 0.0
-
     countdown()
+    play(song, source.send)
 
-    try:
-        while True:
-            heappush_all(frames, song(song_time))
-            while frames and (frames[0][0] < song_time):
-                midi_out = heappop(frames)
-                #print "emit {}".format(midi_out[1])
-                source.send(midi_out[1])
-
-            now = time() - start_time
-            wait_time = -1
-            while wait_time < 0:
-                song_time = song_time + LOOP_WAIT
-                wait_time = song_time - now
-            sleep(wait_time)
-    except KeyboardInterrupt:
-        source.send(all_notes_off())
 
 if __name__=='__main__':
     emitter()

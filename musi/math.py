@@ -47,4 +47,14 @@ def Random(seed=None):
 LessThan = _BinOp(operator.lt)
 
 
+def clamp(minv, rangev, val):
+    return max(minv, min(minv + rangev, val))
+
+
+def Clamp(min_f, range_f, val_f):
+    def _clamp(now):
+        return clamp(min_f(now), range_f(now), val_f(now))
+    return _clamp
+
+
 del operator
