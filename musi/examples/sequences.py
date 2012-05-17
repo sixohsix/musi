@@ -6,8 +6,10 @@ source = MIDISource("sequence emitter")
 dest = MIDIDestination("sequence control")
 
 midi_input = midi.Input(dest.recv)
-tempo_control = math.LinScale(C(60.0), C(2.0), midi.ControllerValue(midi_input, 2, 1))
-filter_control = midi.ControllerValue(midi_input, 2, 2)
+tempo_control = math.LinScale(
+    C(30.0), C(200.0),
+    midi.UnitControllerValue(midi_input, 2, 1, 0.5))
+filter_control = midi.UnitControllerValue(midi_input, 2, 2)
 
 tempo = Tempo(tempo_control, 4)
 
@@ -26,18 +28,15 @@ drums = midi.Mix(
     midi.NoteSequencer(1, [36], beat_f),
     midi.NoteSequencer(1, [None, 38], beat_f),
     )
-bass = midi.Mix(
-    Eval(waves.Sequencer(
-            [midi.NoteSequencer(0, [48], beat_f),
-             C(())],
-            tempo.Duration(bars=1),
-            )
-         )
-    )
 
-filter_ = midi.ControllerChange(
+bassline = [48, 48, None, None] * 4 + [51, 51, None, None] * 4
+bass = If(math.LessThan(C(8.0), tempo.song_bars),
+          midi.NoteSequencer(0, bassline, beat_f),
+          midi.nothing)
+
+filter_ = midi.UnitControllerChange(
     0, 52,
-    math.LinScale(C(0.0), C(0.5), filter_control))
+    math.Mul(C(0.5), filter_control))
 
 song = midi.Mix(
     notes,

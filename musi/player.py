@@ -1,3 +1,6 @@
+from __future__ import print_function
+
+
 def play(song, send_midi=None, loop_rate_hz=200):
     from time import time, sleep
     from heapq import heappush, heappop
@@ -38,5 +41,6 @@ def play(song, send_midi=None, loop_rate_hz=200):
 def countdown():
     from time import sleep
     for i in range(4, 0, -1):
-        print i
+        print(i)
         sleep(1)
+    print("go")

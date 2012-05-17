@@ -59,11 +59,11 @@ class Tempo(object):
         self.bpm_f = no_zero_bpm
         self.bpb = bpb
 
-    def song_beat(self, now):
+    def song_beats(self, now):
         return int(now / 60.0 * self.bpm_f(now))
 
-    def song_bar(self, now):
-        return self.song_beat(now) / self.bpb
+    def song_bars(self, now):
+        return self.song_beats(now) / self.bpb
 
     def Duration(self, bars=0, beats=0):
         nbeats = float((bars * self.bpb) + beats)

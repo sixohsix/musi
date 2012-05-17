@@ -1,8 +1,10 @@
 from .base import C
 
+nothing = C(())
+
 def mclamp(val):
     from .math import clamp
-    return clamp(0, 127, val)
+    return clamp(0, 127, int(val))
 
 
 def all_notes_off(now=None):
@@ -22,6 +24,13 @@ def ControllerChange(channel, ccid, val_f):
             return ((now, (action, ccid, val)),)
         return ()
     return cc
+
+
+def UnitControllerChange(channel, ccid, val_f):
+    from . import math, C
+    return ControllerChange(
+        channel, ccid,
+        math.Mul(C(127.0), val_f))
 
 
 def Mix(*mfs):
@@ -105,7 +114,7 @@ class ControllerValue(object):
         self.action = 0xb0 | clamp(0, 15, int(channel))
         self.ccid = ccid
         self.midi_input = midi_input
-        self.ccval = initial_val
+        self.ccval = mclamp(initial_val)
     def __call__(self, now):
         inp = self.midi_input(now)
         for i, byte in enumerate(inp):
@@ -114,6 +123,13 @@ class ControllerValue(object):
                 and inp[i+1] == self.ccid):
                 self.ccval = inp[i+2]
         return self.ccval
+
+
+def UnitControllerValue(midi_input, channel, ccid, initial_val=0.0):
+    from . import math, C
+    return math.Mul(
+        C(1.0 / 127),
+        ControllerValue(midi_input, channel, ccid, initial_val * 127.0))
 
 
 del C
