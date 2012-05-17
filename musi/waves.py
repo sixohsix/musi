@@ -4,8 +4,9 @@ from .math import Sub
 
 
 class Ramp(object):
-    def __init__(self, period_f):
+    def __init__(self, period_f, offset_f=C(0.0)):
         self.period_f = period_f
+        self.offset_f = offset_f
         self.v = 0.0
         self.last_now = 0.0
     def __call__(self, now):
@@ -13,10 +14,11 @@ class Ramp(object):
         if delta <= 0:
             return self.v
         per = self.period_f(now)
-        valdelta = delta / per
-        self.v = (self.v + valdelta) % 1.0
+        if per != 0:
+            valdelta = delta / per
+            self.v = (self.v + valdelta) % 1.0
         self.last_now = now
-        return self.v
+        return (self.v + self.offset_f(now)) % 1.0
 
 
 def Saw(period_f):
@@ -26,13 +28,19 @@ def Saw(period_f):
 def Sine(period_f, offset_f=C(0.0)):
     import math
     twopi = 2.0 * math.pi
+    ramp = Ramp(period_f, offset_f)
     def sine(now):
-        period = period_f(now)
-        offset = offset_f(now)
-        pos = (((now % period) / period) + offset) % 1.0
-        val = (math.sin(twopi * pos) * 0.5) + 0.5
-        return val
+        return 0.5 + (math.sin(twopi * ramp(now)) / 2.0)
     return sine
+
+
+def Sequencer(values, period_f):
+    nvalues = len(values)
+    ramp = Ramp(period_f)
+    def sequence(now):
+        pos = int(ramp(now) * nvalues) % nvalues
+        return values[pos]
+    return sequence
 
 
 del C, Sub

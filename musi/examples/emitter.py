@@ -1,11 +1,5 @@
-import math
-from functools import partial
-from itertools import chain
-from heapq import heappush, heappop
-from time import time, sleep
-import random
-
-from simplecoremidi import MIDISource, MIDIDestination
+from time import sleep
+from simplecoremidi import MIDISource
 from musi import C, Buffer, Tap, If, midi, math, waves, play
 
 
