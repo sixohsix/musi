@@ -1,6 +1,6 @@
 from time import sleep
 from simplecoremidi import MIDISource
-from musi import C, Buffer, Tap, If, midi, math, waves, play
+from musi import C, Buffer, Tap, If, midi, math, waves, play, countdown
 
 
 def FilterLFO():
@@ -19,11 +19,6 @@ def FilterLFO():
 def Sometimes(probability_f, usual_f, sometimes_f, random_f):
     return If(math.LessThan(random_f, probability_f), sometimes_f, usual_f)
 
-
-def countdown():
-    for i in range(4, 0, -1):
-        print i
-        sleep(1)
 
 random_f = math.Random(666)
 song = midi.Mix(

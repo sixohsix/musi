@@ -52,21 +52,22 @@ def Note(channel, pitch_f, velo_f=None, dur_f=None):
         pitch = pitch_f(now)
         velo = 127 * velo_f(now)
         dur = dur_f(now)
-        return note(channel, pitch, velo, dur, now)
+        if pitch is not None:
+            return note(channel, pitch, velo, dur, now)
+        else:
+            return ()
     return gen_note
 
 
-def NoteSequencer(channel, note_values, note_rate_f, velo_f=C(1.0), dur_f=C(0.1)):
+def NoteSequencer(channel, note_values, note_rate_f, velo_f=None, dur_f=None, sync_f=None):
     from . import base, math, waves
-    b = base.Buffer()
     period_f = math.Mul(base.C(len(note_values)), note_rate_f)
-    seq = waves.Sequencer(note_values, period_f)
+    seq_f = waves.Sequencer(note_values, period_f, sync_f)
+    note_f = Note(channel, seq_f, velo_f, dur_f)
     def note_sequencer(now):
-        pitch = b(seq(now))
-        velo = 127 * velo_f(now)
-        dur = dur_f(now)
-        if pitch is not None:
-            return note(channel, pitch, velo, dur, now)
+        note = note_f(now)
+        if seq_f.changed:
+            return note
         return ()
     return note_sequencer
 

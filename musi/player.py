@@ -33,3 +33,10 @@ def play(song, send_midi=None, loop_rate_hz=200):
             sleep(wait_time)
     except KeyboardInterrupt:
         send_midi(midi.all_notes_off())
+
+
+def countdown():
+    from time import sleep
+    for i in range(4, 0, -1):
+        print i
+        sleep(1)

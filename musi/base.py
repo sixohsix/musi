@@ -39,3 +39,9 @@ def If(test_f, true_f, false_f):
         false = false_f(now)
         return true if test > 0.0 else false
     return if_
+
+
+def Eval(value_f):
+    def eval_(now):
+        return value_f(now)(now)
+    return eval_
