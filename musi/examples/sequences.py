@@ -1,6 +1,14 @@
 from simplecoremidi import MIDISource, MIDIDestination
 from musi import C, Buffer, Tap, If, Eval, Tempo, midi, math, waves, play, countdown
 
+#
+# Connect sequence emitter channel 1 to a synth (eg. Cheetah MS6)
+# Connect sequence emitter channel 2 to a drum machine (eg. 606 preset in Live)
+# Change tempo by modifying sequence control channel 2 control 1
+# Change filter cutoff of a Cheetah MS6 by modifying sequence control channel
+#     2 control 2 (outputs to sequence emitter channel 1 cc 52)
+#
+
 
 source = MIDISource("sequence emitter")
 dest = MIDIDestination("sequence control")
