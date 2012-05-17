@@ -5,7 +5,7 @@ version = '0.1.0'
 
 install_requires = [
     # -*- Extra requirements: -*-
-    'simplecoremidi>=0.2.0',
+    'simplecoremidi>=0.2.2',
     ]
 
 setup(name='musi',
