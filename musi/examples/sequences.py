@@ -35,10 +35,13 @@ notes = midi.NoteSequencer(0, noteseq,
 drums = midi.Mix(
     midi.NoteSequencer(1, [36], beat_f),
     midi.NoteSequencer(1, [None, 38], beat_f),
+    If(math.LessThan(C(15.0), tempo.song_bars),
+       midi.NoteSequencer(1, [42], tempo.Duration(beats=0.5), velo_f=C(0.6)),
+       midi.nothing),
     )
 
 bassline = [48, 48, None, None] * 4 + [51, 51, None, None] * 4
-bass = If(math.LessThan(C(8.0), tempo.song_bars),
+bass = If(math.LessThan(C(7.0), tempo.song_bars),
           midi.NoteSequencer(0, bassline, beat_f),
           midi.nothing)
 

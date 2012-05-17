@@ -108,6 +108,22 @@ class Input(object):
         return self.midi_buf
 
 
+def Output(send_midi, val_f):
+    from heapq import heappush, heappop
+    frames = []
+    def heappush_all(heap, seq):
+        for item in seq:
+            heappush(heap, item)
+
+    def output(now):
+        heappush_all(frames, val_f(now))
+        while frames and (frames[0][0] < now):
+            midi_out = heappop(frames)
+            send_midi(midi_out[1])
+        return None
+    return output
+
+
 class ControllerValue(object):
     def __init__(self, midi_input, channel, ccid, initial_val=0):
         from .math import clamp

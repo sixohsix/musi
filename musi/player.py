@@ -1,41 +1,39 @@
 from __future__ import print_function
 
 
-def play(song, send_midi=None, loop_rate_hz=200):
-    from time import time, sleep
-    from heapq import heappush, heappop
+LOOP_RATE_HZ = 200
+
+
+def play(song_f, send_midi=None, loop_rate_hz=LOOP_RATE_HZ):
     from . import midi
-
-    def heappush_all(heap, seq):
-        for item in seq:
-            heappush(heap, item)
-
-
-    loop_wait = 1.0 / loop_rate_hz
 
     if not send_midi:
         from simplecoremidi import MIDISource
         source = MIDISource("musi emitter")
         send_midi = source.send_midi
 
-    frames = []
-    start_time = time()
-    song_time = 0.0
-    try:
-        while True:
-            heappush_all(frames, song(song_time))
-            while frames and (frames[0][0] < song_time):
-                midi_out = heappop(frames)
-                send_midi(midi_out[1])
+    song_f = midi.Output(send_midi, song_f)
 
-            now = time() - start_time
-            wait_time = -1.0
-            while wait_time < 0.0:
-                song_time = song_time + loop_wait
-                wait_time = song_time - now
-            sleep(wait_time)
+    try:
+        run(song_f, loop_rate_hz)
     except KeyboardInterrupt:
         send_midi(midi.all_notes_off())
+
+
+def run(song_f, loop_rate_hz=LOOP_RATE_HZ):
+    from time import time, sleep
+    loop_wait = 1.0 / loop_rate_hz
+    start_time = time()
+    song_time = 0.0
+    while True:
+        song_f(song_time)
+
+        now = time() - start_time
+        wait_time = -1.0
+        while wait_time < 0.0:
+            song_time = song_time + loop_wait
+            wait_time = song_time - now
+        sleep(wait_time)
 
 
 def countdown():
