@@ -1,5 +1,11 @@
 from __future__ import print_function
 from types import FunctionType, ClassType
+import logging
+
+
+logging.basicConfig()
+log = logging.getLogger("musi")
+
 
 def Constant(val):
     def val_f(now):

@@ -11,7 +11,7 @@ class Ramp(object):
         self.period_f = period_f
         self.offset_f = offset_f
         self.sync_f = sync_f
-        self.v = 0.0
+        self.v = 1.0
         self.last_now = 0.0
         self.cycled = False
     def __call__(self, now):

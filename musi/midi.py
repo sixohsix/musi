@@ -1,6 +1,15 @@
-from .base import C
+from .base import C, log
+
+DEBUG = False
 
 nothing = C(())
+
+
+class Pkt(object):
+    def __init__(self, time, data):
+        self.time = time
+        self.data = data
+
 
 def mclamp(val):
     from .math import clamp
@@ -35,9 +44,19 @@ def UnitControllerChange(channel, ccid, val_f):
 
 def Mix(*mfs):
     from itertools import chain
-    def midi_mix(now):
+    def midi_mix_fast(now):
         return chain(*[f(now) for f in mfs])
-    return midi_mix
+    def midi_mix_debug(now):
+        mixed = []
+        for f in mfs:
+            val = f(now)
+            if type(val) not in (tuple, list):
+                log.critical("Got invalid MIDI: {} sent by {}"
+                             .format(val, f))
+                continue
+            mixed.append(val)
+        return tuple(chain(*mixed))
+    return midi_mix_debug if DEBUG else midi_mix_fast
 
 
 def note(channel, pitch, velo, dur, now):
@@ -146,6 +165,27 @@ def UnitControllerValue(midi_input, channel, ccid, initial_val=0.0):
     return math.Mul(
         C(1.0 / 127),
         ControllerValue(midi_input, channel, ccid, initial_val * 127.0))
+
+
+def StartSend(tick_f=None):
+    from . import waves, C
+    if not tick_f:
+        tick_f = waves.Tick(C(100000000.0))
+    def start_send(now):
+        if tick_f(now) > 0.0:
+            return [(now, (0xfa,))]
+        return ()
+    return start_send
+
+
+def ClockSend(quarter_note_duration_f):
+    from . import waves, math, C
+    tick_f = waves.Tick(math.Mul(C(1.0 / 24), quarter_note_duration_f))
+    def clock_send(now):
+        if tick_f(now) > 0.0:
+            return [(now, (0xf8,))]
+        return ()
+    return clock_send
 
 
 del C

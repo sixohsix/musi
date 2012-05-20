@@ -18,6 +18,7 @@ def play(song_f, send_midi=None, loop_rate_hz=LOOP_RATE_HZ):
         run(song_f, loop_rate_hz)
     except KeyboardInterrupt:
         send_midi(midi.all_notes_off())
+        send_midi((0xfc,))
 
 
 def run(song_f, loop_rate_hz=LOOP_RATE_HZ):
@@ -25,14 +26,22 @@ def run(song_f, loop_rate_hz=LOOP_RATE_HZ):
     loop_wait = 1.0 / loop_rate_hz
     start_time = time()
     song_time = 0.0
+    loop_times = []
     while True:
+        loop_start = time()
         song_f(song_time)
+        loop_end = time()
+
+        loop_times.append(loop_end - loop_start)
+        while len(loop_times) > 7:
+            loop_times.pop(0)
+        avg_loop_time = sum(loop_times, 0.0) / len(loop_times)
 
         now = time() - start_time
         wait_time = -1.0
         while wait_time < 0.0:
             song_time = song_time + loop_wait
-            wait_time = song_time - now
+            wait_time = song_time - now - avg_loop_time
         sleep(wait_time)
 
 
