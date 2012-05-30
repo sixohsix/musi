@@ -10,7 +10,7 @@ def play(song_f, send_midi=None, loop_rate_hz=LOOP_RATE_HZ):
     if not send_midi:
         from simplecoremidi import MIDISource
         source = MIDISource("musi emitter")
-        send_midi = source.send_midi
+        send_midi = source.send
 
     song_f = midi.Output(send_midi, song_f)
 
@@ -19,6 +19,7 @@ def play(song_f, send_midi=None, loop_rate_hz=LOOP_RATE_HZ):
     except KeyboardInterrupt:
         send_midi(midi.all_notes_off())
         send_midi((0xfc,))
+        raise
 
 
 def run(song_f, loop_rate_hz=LOOP_RATE_HZ):
