@@ -188,4 +188,72 @@ def ClockSend(quarter_note_duration_f):
     return clock_send
 
 
+class BufferNow(object):
+    def __init__(selfm f):
+        self.last_now = None
+        self.last_res = None
+        self.f = f
+    def __call__(self, now):
+        if now != self.last_now:
+            self.last_res = self.f(now)
+            self.last_now = now
+        return self.last_res
+
+
+class NoteOn(object):
+    def __init__(self, channel, note, velocity):
+        self.channel = channel
+        self.note = note
+        self.velocity = velocity
+
+def is_note_on(evt):
+    return evt.__class__ is NoteOn
+
+
+class ControllerChange(object):
+    def __init__(self, channel, cc, value):
+        self.channel = channel
+        self.cc = cc
+        self.value = value
+
+def is_controller_change(evt):
+    return evt.__class__ is ControllerChange
+
+
+def Decoder(midi_input_f):
+    buf = []
+    def decoder(now):
+        evts = []
+        buf.extend(midi_input_f(now))
+        while buf:
+            while buf and not buf[0] & 0x80:
+                buf.pop(0)
+            if len(buf) > 2 and (buf[0] & 0xF0 == 0x90):
+                channel = buf.pop(0) & 0x0F
+                note = buf.pop(0)
+                velo = buf.pop(0)
+                evts.append(NoteOn(channel, note, velo))
+            elif len(buf > 2) and (buf[0] & 0xF0 == 0xB0):
+                channel = buf.pop(0) & 0x0F
+                cc = buf.pop(0)
+                val = buf.pop(0)
+                evts.append(ControllerChange(channel, cc, val))
+            elif buf and (buf[0] & 0xF0):
+                buf.pop(0)
+        return evts
+    return BufferNow(decoder)
+
+
+def FilterController(decoded_midi_f, channel=None, cc=None, function):
+    def filter_controller(now):
+        evts = decoded_midi_f(now)
+        for evt in evts:
+            if (is_controller_change(evt)
+                and (channel is None or evt.channel == channel)
+                and (cc is None or evt.cc == cc)):
+                function(now, evt)
+        return None
+    return filter_controller
+
+
 del C

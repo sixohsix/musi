@@ -32,10 +32,11 @@ beat_f = tempo.Duration(beats=1)
 phrase_f = tempo.Duration(bars=4)
 
 bar_sync = waves.Tick(tempo.Duration(bars=1))
+bar8_sync = waves.Tick(tempo.Duration(bars=8))
 
 warp_quarter_f = math.Mul(
     quarter_f,
-    math.Add(waves.Sine(C(5.0)),
+    math.Add(waves.Sine(C(5.0), sync_f=bar8_sync),
              math.Mul(waves.Saw(C(30.0)), C(0.5))
              ),
     C(2.0))
@@ -49,19 +50,25 @@ def sometimes_notes(seq, prob_f):
         midi.nothing,
         )
 
+def warp_seq(seq):
+    return midi.NoteSequencer(
+        1, seq,
+        warp_quarter_f,
+        velo_f=math.Add(C(0.1), waves.Sine(C(4.0))),
+        sync_f=bar_sync)
+
+
 drums = midi.Mix(
     midi.StartSend(),
     midi.ClockSend(beat_f),
     midi.NoteSequencer(1, kick, quarter_f),
     midi.NoteSequencer(1, snare, quarter_f),
     midi.NoteSequencer(1, hh_cl, quarter_f),
-    midi.NoteSequencer(1, clap,
-                       warp_quarter_f,
-                       velo_f=math.Add(C(0.1), waves.Sine(C(4.0))),
-                       sync_f=bar_sync),
-    sometimes_notes(kick_add, C(0.5)),
-    sometimes_notes(snare_add, C(0.5)),
-    sometimes_notes(hh_cl_add, C(0.5)),
+    warp_seq(clap),
+    warp_seq(snare),
+    sometimes_notes(kick_add, C(0.2)),
+    sometimes_notes(snare_add, C(0.2)),
+    sometimes_notes(hh_cl_add, C(0.2)),
     )
 
 song = midi.Mix(
